@@ -39,6 +39,8 @@ import StaffSaleDetail from "./pages/staff/sales/SaleDetail";
 import ChangePassword from "./pages/staff/profile/ChangePassword";
 import StaffReturnList from "./pages/admin/returns/ReturnList";
 
+
+
 // Errors
 import NotFound from "./pages/errors/NotFound";
 
@@ -87,6 +89,7 @@ function App() {
           {/* Purchases */}
           <Route path="/admin/purchases" element={<AdminRoute><Layout title="Purchases"><PurchaseList /></Layout></AdminRoute>} />
           <Route path="/admin/purchases/add" element={<AdminRoute><Layout title="Add Purchase"><AddPurchase /></Layout></AdminRoute>} />
+
 
           {/* Sales */}
           <Route path="/admin/sales" element={<AdminRoute><Layout title="All Sales"><AllSales /></Layout></AdminRoute>} />

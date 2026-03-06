@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { Truck, Plus, Pencil, Trash2, X, Check, Search, Phone, Mail, MapPin, Eye } from "lucide-react";
-import {
-  getAllSuppliers, createSupplier, updateSupplier, deleteSupplier
-} from "../../../services/supplierService";
+import { Truck, Plus, Pencil, Trash2, X, Check, Search, Mail, MapPin, Eye, User } from "lucide-react";
+import { getAllSuppliers, createSupplier, updateSupplier, deleteSupplier } from "../../../services/supplierService";
 import Loader from "../../../components/common/Loader";
 
 const Modal = ({ title, onClose, children }) => (
@@ -38,7 +36,7 @@ const ConfirmModal = ({ name, onConfirm, onCancel, loading }) => (
   </div>
 );
 
-const initForm = () => ({ name: "", contact_person: "", phone: "", email: "", address: "" });
+const initForm = () => ({ name: "", contact: "", email: "", address: "" });
 
 const SupplierList = () => {
   const [suppliers, setSuppliers] = useState([]);
@@ -73,8 +71,7 @@ const SupplierList = () => {
     const q = search.toLowerCase();
     setFiltered(suppliers.filter(s =>
       s.name.toLowerCase().includes(q) ||
-      (s.contact_person || "").toLowerCase().includes(q) ||
-      (s.phone || "").includes(q) ||
+      (s.contact || "").toLowerCase().includes(q) ||
       (s.email || "").toLowerCase().includes(q)
     ));
   }, [search, suppliers]);
@@ -137,58 +134,16 @@ const SupplierList = () => {
   };
 
   const openEdit = (s) => {
-    setForm({
-      name: s.name,
-      contact_person: s.contact_person || "",
-      phone: s.phone || "",
-      email: s.email || "",
-      address: s.address || "",
-    });
+    setForm({ name: s.name, contact: s.contact || "", email: s.email || "", address: s.address || "" });
     setEditItem(s);
     setError("");
   };
-
-  const SupplierForm = ({ onSubmit, submitLabel }) => (
-    <form onSubmit={onSubmit} className="space-y-4">
-      {error && <div className="px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">{error}</div>}
-      <div>
-        <label className="label">Supplier Name *</label>
-        <input name="name" value={form.name} onChange={fc} placeholder="e.g. Tech Distributors Ltd" className="input" autoComplete="off" />
-      </div>
-      <div>
-        <label className="label">Contact Person</label>
-        <input name="contact_person" value={form.contact_person} onChange={fc} placeholder="Optional" className="input" autoComplete="off" />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Phone</label>
-          <input name="phone" value={form.phone} onChange={fc} placeholder="Optional" className="input" autoComplete="off" />
-        </div>
-        <div>
-          <label className="label">Email</label>
-          <input name="email" type="email" value={form.email} onChange={fc} placeholder="Optional" className="input" autoComplete="off" />
-        </div>
-      </div>
-      <div>
-        <label className="label">Address</label>
-        <textarea name="address" value={form.address} onChange={fc} placeholder="Optional" className="input resize-none" rows={2} />
-      </div>
-      <div className="flex gap-3 pt-1">
-        <button type="button" onClick={closeAll} className="btn-secondary flex-1">Cancel</button>
-        <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
-          {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check size={15} />}
-          {saving ? "Saving..." : submitLabel}
-        </button>
-      </div>
-    </form>
-  );
 
   if (loading) return <Loader fullScreen />;
 
   return (
     <div className="space-y-6">
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-gray-800 font-bold text-2xl">Suppliers</h1>
@@ -199,20 +154,16 @@ const SupplierList = () => {
         </button>
       </div>
 
-      {/* Search */}
       <div className="relative max-w-sm">
         <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text" placeholder="Search suppliers..."
-          value={search} onChange={e => setSearch(e.target.value)} className="input pl-9"
-        />
+        <input type="text" placeholder="Search suppliers..."
+          value={search} onChange={e => setSearch(e.target.value)} className="input pl-9" />
       </div>
 
       {error && !showAdd && !editItem && (
         <div className="px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">{error}</div>
       )}
 
-      {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
@@ -226,9 +177,9 @@ const SupplierList = () => {
                 <tr>
                   <th className="table-header">#</th>
                   <th className="table-header">Name</th>
-                  <th className="table-header">Contact Person</th>
-                  <th className="table-header">Phone</th>
+                  <th className="table-header">Contact</th>
                   <th className="table-header">Email</th>
+                  <th className="table-header">Address</th>
                   <th className="table-header">Actions</th>
                 </tr>
               </thead>
@@ -244,9 +195,9 @@ const SupplierList = () => {
                         <span className="font-medium text-gray-800 text-sm">{s.name}</span>
                       </div>
                     </td>
-                    <td className="table-cell text-gray-500 text-sm">{s.contact_person || "—"}</td>
-                    <td className="table-cell text-gray-500 text-sm">{s.phone || "—"}</td>
+                    <td className="table-cell text-gray-500 text-sm">{s.contact || "—"}</td>
                     <td className="table-cell text-gray-500 text-sm">{s.email || "—"}</td>
+                    <td className="table-cell text-gray-500 text-sm">{s.address || "—"}</td>
                     <td className="table-cell">
                       <div className="flex items-center gap-2">
                         <button onClick={() => setViewItem(s)} title="View"
@@ -274,14 +225,64 @@ const SupplierList = () => {
       {/* ADD MODAL */}
       {showAdd && (
         <Modal title="Add Supplier" onClose={closeAll}>
-          <SupplierForm onSubmit={handleAdd} submitLabel="Add Supplier" />
+          {error && <div className="mb-4 px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">{error}</div>}
+          <form onSubmit={handleAdd} className="space-y-4">
+            <div>
+              <label className="label">Supplier Name *</label>
+              <input name="name" value={form.name} onChange={fc} placeholder="e.g. Tech Distributors Ltd" className="input" autoComplete="off" autoFocus />
+            </div>
+            <div>
+              <label className="label">Contact</label>
+              <input name="contact" value={form.contact} onChange={fc} placeholder="Phone or contact person" className="input" autoComplete="off" />
+            </div>
+            <div>
+              <label className="label">Email</label>
+              <input name="email" type="email" value={form.email} onChange={fc} placeholder="Optional" className="input" autoComplete="off" />
+            </div>
+            <div>
+              <label className="label">Address</label>
+              <textarea name="address" value={form.address} onChange={fc} placeholder="Optional" className="input resize-none" rows={2} />
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={closeAll} className="btn-secondary flex-1">Cancel</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check size={15} />}
+                {saving ? "Saving..." : "Add Supplier"}
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
 
       {/* EDIT MODAL */}
       {editItem && (
         <Modal title="Edit Supplier" onClose={closeAll}>
-          <SupplierForm onSubmit={handleEdit} submitLabel="Save Changes" />
+          {error && <div className="mb-4 px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">{error}</div>}
+          <form onSubmit={handleEdit} className="space-y-4">
+            <div>
+              <label className="label">Supplier Name *</label>
+              <input name="name" value={form.name} onChange={fc} className="input" autoComplete="off" autoFocus />
+            </div>
+            <div>
+              <label className="label">Contact</label>
+              <input name="contact" value={form.contact} onChange={fc} className="input" autoComplete="off" />
+            </div>
+            <div>
+              <label className="label">Email</label>
+              <input name="email" type="email" value={form.email} onChange={fc} className="input" autoComplete="off" />
+            </div>
+            <div>
+              <label className="label">Address</label>
+              <textarea name="address" value={form.address} onChange={fc} className="input resize-none" rows={2} />
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={closeAll} className="btn-secondary flex-1">Cancel</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check size={15} />}
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
 
@@ -295,12 +296,12 @@ const SupplierList = () => {
               </div>
               <div>
                 <p className="text-gray-800 font-semibold text-lg">{viewItem.name}</p>
-                <p className="text-gray-400 text-sm">{viewItem.contact_person || "No contact person"}</p>
+                <p className="text-gray-400 text-sm">{viewItem.contact || "No contact info"}</p>
               </div>
             </div>
             <div className="bg-gray-50 rounded-xl divide-y divide-gray-100">
               {[
-                { label: "Phone", value: viewItem.phone || "Not provided", icon: Phone },
+                { label: "Contact", value: viewItem.contact || "Not provided", icon: User },
                 { label: "Email", value: viewItem.email || "Not provided", icon: Mail },
                 { label: "Address", value: viewItem.address || "Not provided", icon: MapPin },
               ].map(({ label, value, icon: Icon }) => (
@@ -323,12 +324,7 @@ const SupplierList = () => {
 
       {/* DELETE CONFIRM */}
       {deleteItem && (
-        <ConfirmModal
-          name={deleteItem.name}
-          onConfirm={handleDelete}
-          onCancel={closeAll}
-          loading={saving}
-        />
+        <ConfirmModal name={deleteItem.name} onConfirm={handleDelete} onCancel={closeAll} loading={saving} />
       )}
     </div>
   );

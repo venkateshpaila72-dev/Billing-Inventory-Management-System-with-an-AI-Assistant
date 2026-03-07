@@ -17,6 +17,7 @@ import AddStaff from "./pages/admin/staff/AddStaff";
 import EditStaff from "./pages/admin/staff/EditStaff";
 import StaffDetail from "./pages/admin/staff/StaffDetail";
 import ResetPassword from "./pages/admin/staff/ResetPassword";
+import PasswordResetRequests from "./pages/admin/staff/PasswordResetRequests";
 import CategoryList from "./pages/admin/categories/CategoryList";
 import SupplierList from "./pages/admin/suppliers/SupplierList";
 import InventoryList from "./pages/admin/inventory/InventoryList";
@@ -38,8 +39,6 @@ import MySales from "./pages/staff/sales/MySales";
 import StaffSaleDetail from "./pages/staff/sales/SaleDetail";
 import ChangePassword from "./pages/staff/profile/ChangePassword";
 import StaffReturnList from "./pages/admin/returns/ReturnList";
-
-
 
 // Errors
 import NotFound from "./pages/errors/NotFound";
@@ -69,9 +68,10 @@ function App() {
           {/* ── Admin Routes ── */}
           <Route path="/admin/dashboard" element={<AdminRoute><Layout title="Dashboard"><AdminDashboard /></Layout></AdminRoute>} />
 
-          {/* Staff */}
+          {/* Staff Management */}
           <Route path="/admin/staff" element={<AdminRoute><Layout title="Staff Management"><StaffList /></Layout></AdminRoute>} />
           <Route path="/admin/staff/add" element={<AdminRoute><Layout title="Add Staff"><AddStaff /></Layout></AdminRoute>} />
+          <Route path="/admin/staff/reset-requests" element={<AdminRoute><Layout title="Password Reset Requests"><PasswordResetRequests /></Layout></AdminRoute>} />
           <Route path="/admin/staff/:id" element={<AdminRoute><Layout title="Staff Detail"><StaffDetail /></Layout></AdminRoute>} />
           <Route path="/admin/staff/:id/edit" element={<AdminRoute><Layout title="Edit Staff"><EditStaff /></Layout></AdminRoute>} />
           <Route path="/admin/staff/:id/reset-password" element={<AdminRoute><Layout title="Reset Password"><ResetPassword /></Layout></AdminRoute>} />
@@ -89,7 +89,6 @@ function App() {
           {/* Purchases */}
           <Route path="/admin/purchases" element={<AdminRoute><Layout title="Purchases"><PurchaseList /></Layout></AdminRoute>} />
           <Route path="/admin/purchases/add" element={<AdminRoute><Layout title="Add Purchase"><AddPurchase /></Layout></AdminRoute>} />
-
 
           {/* Sales */}
           <Route path="/admin/sales" element={<AdminRoute><Layout title="All Sales"><AllSales /></Layout></AdminRoute>} />

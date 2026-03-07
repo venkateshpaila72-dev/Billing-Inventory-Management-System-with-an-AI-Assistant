@@ -8,3 +8,4 @@ from app.models.sale_item import SaleItem
 from app.models.purchase import Purchase
 from app.models.return_record import ReturnRecord
 from app.models.notification import Notification
+from app.models.password_reset_request import PasswordResetRequest

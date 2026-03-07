@@ -5,7 +5,7 @@ import AdminRoute from "./routes/AdminRoute";
 import StaffRoute from "./routes/StaffRoute";
 import Sidebar from "./components/common/Sidebar";
 import Navbar from "./components/common/Navbar";
-import ProductDetail from "./pages/admin/inventory/ProductDetail";
+import ChatbotButton from "./components/chatbot/ChatbotButton";
 
 // Auth
 import Login from "./pages/auth/Login";
@@ -23,6 +23,7 @@ import SupplierList from "./pages/admin/suppliers/SupplierList";
 import InventoryList from "./pages/admin/inventory/InventoryList";
 import AddProduct from "./pages/admin/inventory/AddProduct";
 import EditProduct from "./pages/admin/inventory/EditProduct";
+import ProductDetail from "./pages/admin/inventory/ProductDetail";
 import PurchaseList from "./pages/admin/purchases/PurchaseList";
 import AddPurchase from "./pages/admin/purchases/AddPurchase";
 import AllSales from "./pages/admin/sales/AllSales";
@@ -31,6 +32,8 @@ import ReturnList from "./pages/admin/returns/ReturnList";
 import ProcessReturn from "./pages/admin/returns/ProcessReturn";
 import NotificationsPage from "./pages/admin/notifications/NotificationsPage";
 import SalesAnalytics from "./pages/admin/analytics/SalesAnalytics";
+import ProfitAnalytics from "./pages/admin/analytics/ProfitAnalytics";
+import CustomerAnalytics from "./pages/admin/analytics/CustomerAnalytics";
 
 // Staff pages
 import StaffDashboard from "./pages/staff/Dashboard";
@@ -38,7 +41,6 @@ import BillingPage from "./pages/staff/billing/BillingPage";
 import MySales from "./pages/staff/sales/MySales";
 import StaffSaleDetail from "./pages/staff/sales/SaleDetail";
 import ChangePassword from "./pages/staff/profile/ChangePassword";
-import StaffReturnList from "./pages/admin/returns/ReturnList";
 
 // Errors
 import NotFound from "./pages/errors/NotFound";
@@ -53,6 +55,7 @@ const Layout = ({ children, title }) => (
         {children}
       </main>
     </div>
+    <ChatbotButton />
   </div>
 );
 
@@ -98,16 +101,20 @@ function App() {
           <Route path="/admin/returns" element={<AdminRoute><Layout title="Returns"><ReturnList /></Layout></AdminRoute>} />
           <Route path="/admin/returns/process" element={<AdminRoute><Layout title="Process Return"><ProcessReturn /></Layout></AdminRoute>} />
 
-          {/* Notifications & Analytics */}
+          {/* Notifications */}
           <Route path="/admin/notifications" element={<AdminRoute><Layout title="Notifications"><NotificationsPage /></Layout></AdminRoute>} />
+
+          {/* Analytics */}
           <Route path="/admin/analytics" element={<AdminRoute><Layout title="Analytics"><SalesAnalytics /></Layout></AdminRoute>} />
+          <Route path="/admin/analytics/profit" element={<AdminRoute><Layout title="Profit Analytics"><ProfitAnalytics /></Layout></AdminRoute>} />
+          <Route path="/admin/analytics/customers" element={<AdminRoute><Layout title="Customer Analytics"><CustomerAnalytics /></Layout></AdminRoute>} />
 
           {/* ── Staff Routes ── */}
           <Route path="/staff/dashboard" element={<StaffRoute><Layout title="Dashboard"><StaffDashboard /></Layout></StaffRoute>} />
           <Route path="/staff/billing" element={<StaffRoute><Layout title="Billing"><BillingPage /></Layout></StaffRoute>} />
           <Route path="/staff/sales" element={<StaffRoute><Layout title="My Sales"><MySales /></Layout></StaffRoute>} />
           <Route path="/staff/sales/:id" element={<StaffRoute><Layout title="Sale Detail"><StaffSaleDetail /></Layout></StaffRoute>} />
-          <Route path="/staff/returns" element={<StaffRoute><Layout title="Returns"><StaffReturnList /></Layout></StaffRoute>} />
+          <Route path="/staff/returns" element={<StaffRoute><Layout title="Process Return"><ProcessReturn /></Layout></StaffRoute>} />
           <Route path="/staff/profile" element={<StaffRoute><Layout title="Change Password"><ChangePassword /></Layout></StaffRoute>} />
 
           {/* 404 */}

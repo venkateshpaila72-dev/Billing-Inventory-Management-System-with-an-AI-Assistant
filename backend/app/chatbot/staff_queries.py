@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.crud.sale import get_sales_by_staff, get_sale_by_id
 from app.crud.return_record import get_returns_by_sale
+from app.crud.analytics import get_top_staff
 
 
 def handle_staff_intent(db: Session, intent: str, message: str, staff_id: int) -> str:
@@ -12,6 +13,7 @@ def handle_staff_intent(db: Session, intent: str, message: str, staff_id: int) -
             "- Sale details by ID\n"
             "- How billing works\n"
             "- Your returns\n"
+            "- Top performing staff\n"
             "What would you like to know?"
         )
 
@@ -20,31 +22,35 @@ def handle_staff_intent(db: Session, intent: str, message: str, staff_id: int) -
         if not sales:
             return "You have no sales records yet."
 
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
+
         msg = message.lower()
-        if "today" in msg:
-            from datetime import datetime
-            today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-            sales = [s for s in sales if s.created_at >= today]
+        if "today" in msg or "daily" in msg:
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
             period = "today"
-        elif "week" in msg:
-            from datetime import datetime, timedelta
-            week_start = datetime.utcnow() - timedelta(days=7)
-            sales = [s for s in sales if s.created_at >= week_start]
+        elif "week" in msg or "weekly" in msg:
+            start = now - timedelta(days=7)
             period = "this week"
-        elif "month" in msg:
-            from datetime import datetime
-            now = datetime.utcnow()
-            month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            sales = [s for s in sales if s.created_at >= month_start]
+        elif "month" in msg or "monthly" in msg:
+            start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             period = "this month"
-        elif "year" in msg:
-            from datetime import datetime
-            now = datetime.utcnow()
-            year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-            sales = [s for s in sales if s.created_at >= year_start]
+        elif "year" in msg or "yearly" in msg:
+            start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
             period = "this year"
         else:
+            start = None
             period = "all time"
+
+        if start:
+            filtered = []
+            for s in sales:
+                sale_dt = s.created_at
+                if sale_dt.tzinfo is None:
+                    sale_dt = sale_dt.replace(tzinfo=timezone.utc)
+                if sale_dt >= start:
+                    filtered.append(s)
+            sales = filtered
 
         if not sales:
             return f"You have no sales for {period}."
@@ -70,7 +76,6 @@ def handle_staff_intent(db: Session, intent: str, message: str, staff_id: int) -
         if not sale:
             return f"Sale ID {sale_id} not found."
 
-        # Staff can only see their own sales
         if sale.staff_id != staff_id:
             return "You can only view your own sales."
 
@@ -113,12 +118,22 @@ def handle_staff_intent(db: Session, intent: str, message: str, staff_id: int) -
             f"- Total Refunded: ₹{round(total_refund, 2)}"
         )
 
+    elif intent == "top_staff":
+        data = get_top_staff(db, 5)
+        if not data:
+            return "No sales data available yet."
+        lines = ["Top Performing Staff:"]
+        for i, s in enumerate(data, 1):
+            lines.append(f"{i}. {s['staff_name']} - {s['total_sales']} sales (₹{s['total_revenue']})")
+        return "\n".join(lines)
+
     else:
         return (
-            "I can only help you with:\n"
+            "I can help you with:\n"
             "- Your sales (today/week/month/year)\n"
             "- Sale details by ID\n"
             "- Billing process help\n"
             "- Your returns\n"
-            "For inventory, staff or full analytics, please contact admin."
+            "- Top performing staff\n"
+            "For inventory or full analytics, please contact admin."
         )

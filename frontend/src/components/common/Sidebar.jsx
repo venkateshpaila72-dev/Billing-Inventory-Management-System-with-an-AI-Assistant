@@ -1,23 +1,12 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useState, useEffect } from "react";
+import { getResetRequests } from "../../services/passwordService";
 import {
   LayoutDashboard, ShoppingCart, Package, Users,
   BarChart2, Bell, RotateCcw, Truck, Tag,
   LogOut, Store, ClipboardList, UserCircle
 } from "lucide-react";
-
-const adminLinks = [
-  { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/admin/sales", icon: ClipboardList, label: "Sales" },
-  { to: "/admin/purchases", icon: ShoppingCart, label: "Purchases" },
-  { to: "/admin/inventory", icon: Package, label: "Inventory" },
-  { to: "/admin/categories", icon: Tag, label: "Categories" },
-  { to: "/admin/suppliers", icon: Truck, label: "Suppliers" },
-  { to: "/admin/staff", icon: Users, label: "Staff" },
-  { to: "/admin/returns", icon: RotateCcw, label: "Returns" },
-  { to: "/admin/notifications", icon: Bell, label: "Notifications" },
-  { to: "/admin/analytics", icon: BarChart2, label: "Analytics" },
-];
 
 const staffLinks = [
   { to: "/staff/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -30,6 +19,38 @@ const staffLinks = [
 const Sidebar = () => {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [resetCount, setResetCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin()) return;
+    const fetch = () => {
+      getResetRequests()
+        .then(data => setResetCount(Array.isArray(data) ? data.length : 0))
+        .catch(() => {});
+    };
+    fetch();
+    const interval = setInterval(fetch, 30000);
+    // Immediately refetch when a reset is resolved
+    window.addEventListener("resetRequestResolved", fetch);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("resetRequestResolved", fetch);
+    };
+  }, []);
+
+  const adminLinks = [
+    { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/admin/sales", icon: ClipboardList, label: "Sales" },
+    { to: "/admin/purchases", icon: ShoppingCart, label: "Purchases" },
+    { to: "/admin/inventory", icon: Package, label: "Inventory" },
+    { to: "/admin/categories", icon: Tag, label: "Categories" },
+    { to: "/admin/suppliers", icon: Truck, label: "Suppliers" },
+    { to: "/admin/staff", icon: Users, label: "Staff", badge: resetCount },
+    { to: "/admin/returns", icon: RotateCcw, label: "Returns" },
+    { to: "/admin/notifications", icon: Bell, label: "Notifications" },
+    { to: "/admin/analytics", icon: BarChart2, label: "Analytics" },
+  ];
+
   const links = isAdmin() ? adminLinks : staffLinks;
 
   const handleLogout = () => {
@@ -39,6 +60,7 @@ const Sidebar = () => {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-900 flex flex-col z-50 shadow-2xl">
+
       {/* Logo */}
       <div className="px-6 py-6 border-b border-slate-700/50">
         <div className="flex items-center gap-3">
@@ -58,12 +80,12 @@ const Sidebar = () => {
           Navigation
         </p>
         <ul className="space-y-0.5">
-          {links.map(({ to, icon: Icon, label }) => (
+          {links.map(({ to, icon: Icon, label, badge }) => (
             <li key={to}>
               <NavLink
                 to={to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
                   ${isActive
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
                     : "text-slate-400 hover:text-white hover:bg-slate-800"
@@ -71,7 +93,12 @@ const Sidebar = () => {
                 }
               >
                 <Icon size={17} className="shrink-0" />
-                <span>{label}</span>
+                <span className="flex-1">{label}</span>
+                {badge > 0 && (
+                  <span className="w-5 h-5 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0">
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                )}
               </NavLink>
             </li>
           ))}

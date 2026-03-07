@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Plus, Search, Eye, Pencil, KeyRound, ToggleLeft, ToggleRight } from "lucide-react";
 import { getAllStaff, toggleStaffStatus } from "../../../services/staffService";
+import { getResetRequests } from "../../../services/passwordService";
 import Loader from "../../../components/common/Loader";
 
 const StaffList = () => {
@@ -10,13 +11,18 @@ const StaffList = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [resetStaffIds, setResetStaffIds] = useState(new Set());
   const navigate = useNavigate();
 
   const load = async () => {
     try {
-      const data = await getAllStaff();
-      setStaff(data);
-      setFiltered(data);
+      const [staffData, resetData] = await Promise.all([
+        getAllStaff(),
+        getResetRequests().catch(() => []),
+      ]);
+      setStaff(staffData);
+      setFiltered(staffData);
+      setResetStaffIds(new Set(resetData.map(r => r.staff_id)));
     } catch {
       setError("Failed to load staff.");
     } finally {
@@ -24,7 +30,16 @@ const StaffList = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // Refetch when user comes back to this tab/page
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) load();
+    });
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
 
   useEffect(() => {
     const q = search.toLowerCase();
@@ -45,6 +60,8 @@ const StaffList = () => {
 
   if (loading) return <Loader fullScreen />;
 
+  const pendingCount = resetStaffIds.size;
+
   return (
     <div className="space-y-6">
 
@@ -57,6 +74,23 @@ const StaffList = () => {
           <Plus size={16} /> Add Staff
         </button>
       </div>
+
+      {/* Alert banner for pending reset requests */}
+      {pendingCount > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl">
+          <div className="flex items-center gap-2.5">
+            <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+            <p className="text-orange-700 text-sm font-medium">
+              {pendingCount} staff member{pendingCount > 1 ? "s have" : " has"} a pending password reset request
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/admin/staff/reset-requests")}
+            className="text-orange-600 text-xs font-semibold hover:underline shrink-0 ml-3">
+            View Requests →
+          </button>
+        </div>
+      )}
 
       <div className="relative max-w-sm">
         <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -91,10 +125,21 @@ const StaffList = () => {
                     <td className="table-cell text-gray-400 text-xs">{i + 1}</td>
                     <td className="table-cell">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                          {s.name.charAt(0).toUpperCase()}
+                        <div className="relative">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                            {s.name.charAt(0).toUpperCase()}
+                          </div>
+                          {/* Orange dot for pending reset request */}
+                          {resetStaffIds.has(s.id) && (
+                            <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-orange-500 border-2 border-white rounded-full" title="Pending password reset request" />
+                          )}
                         </div>
-                        <span className="font-medium text-gray-800 text-sm">{s.name}</span>
+                        <div>
+                          <span className="font-medium text-gray-800 text-sm">{s.name}</span>
+                          {resetStaffIds.has(s.id) && (
+                            <p className="text-orange-500 text-xs font-medium">Password reset requested</p>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="table-cell text-gray-500 text-sm">{s.email}</td>
@@ -122,7 +167,10 @@ const StaffList = () => {
                           <Pencil size={15} />
                         </button>
                         <button onClick={() => navigate(`/admin/staff/${s.id}/reset-password`)} title="Reset Password"
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-50 transition-colors">
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            resetStaffIds.has(s.id)
+                              ? "text-orange-500 bg-orange-50 hover:bg-orange-100"
+                              : "text-gray-400 hover:text-amber-500 hover:bg-amber-50"}`}>
                           <KeyRound size={15} />
                         </button>
                         <button onClick={() => handleToggle(s)} title={s.is_active ? "Deactivate" : "Activate"}

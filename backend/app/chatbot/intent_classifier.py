@@ -6,13 +6,13 @@ def classify_intent(message: str) -> str:
         return "greeting"
 
     # Sales queries
-    if any(word in msg for word in ["my sales", "my revenue", "i sold", "sales today", "sales this week", "sales this month", "sales this year", "how many sales"]):
+    if any(word in msg for word in ["my sales", "my revenue", "i sold", "sales today", "sales this week", "sales this month", "sales this year", "how many sales", "my daily", "my weekly", "my monthly", "my yearly", "my today", "sales count", "how much i sold", "what i sold"]):
         return "my_sales"
 
     if any(word in msg for word in ["all sales", "total sales", "everyone sales", "staff sales"]):
         return "all_sales"
 
-    # Sale by ID
+    # Sale by ID — check before other sales
     if ("sale" in msg or "bill" in msg) and any(word in msg for word in ["id", "number", "find", "search", "details"]):
         return "sale_by_id"
 
@@ -40,19 +40,21 @@ def classify_intent(message: str) -> str:
             return "profit_yearly"
         return "profit_daily"
 
-    # Inventory / Products
-    if any(word in msg for word in ["inventory", "stock", "products", "items"]):
-        if any(word in msg for word in ["low", "less", "shortage", "alert", "running out"]):
-            return "low_stock"
-        return "inventory_status"
-
-    # Top products
-    if any(word in msg for word in ["top product", "best product", "most sold", "popular product", "selling product"]):
+    # ✅ Top products — MUST come before inventory check
+    if any(word in msg for word in ["top product", "best product", "most sold", "popular product", "selling product", "top products", "best selling"]):
         return "top_products"
 
-    # Top staff
-    if any(word in msg for word in ["top staff", "best staff", "performance", "who sold", "most sales staff"]):
+    # Top staff — MUST come before all_staff check
+    if any(word in msg for word in ["top staff", "best staff", "performance", "who sold", "most sales staff", "top performing"]):
         return "top_staff"
+
+    # Low stock — MUST come before general inventory check
+    if any(word in msg for word in ["low stock", "low on stock", "shortage", "running out", "restock", "out of stock"]):
+        return "low_stock"
+
+    # General inventory
+    if any(word in msg for word in ["inventory", "stock", "products", "items"]):
+        return "inventory_status"
 
     # Staff details
     if any(word in msg for word in ["staff", "employee", "workers", "team"]):
@@ -67,7 +69,7 @@ def classify_intent(message: str) -> str:
         return "notifications"
 
     # Billing help
-    if any(word in msg for word in ["how to bill", "billing process", "how to sell", "how to add", "billing help", "how does billing"]):
+    if any(word in msg for word in ["how to bill", "billing process", "how to sell", "how to add", "billing help", "how does billing", "how billing", "billing works", "how to create", "create bill", "make bill", "generate bill"]):
         return "billing_help"
 
     # Returns

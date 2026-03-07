@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { KeyRound, Eye, EyeOff, Check, X, RefreshCw } from "lucide-react";
 import { getResetRequests, adminResetPassword } from "../../../services/passwordService";
 import { formatDateTime } from "../../../utils/formatDate";
@@ -8,6 +9,7 @@ const PasswordResetRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // Reset modal
   const [selected, setSelected] = useState(null);
@@ -15,7 +17,6 @@ const PasswordResetRequests = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [successId, setSuccessId] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -42,9 +43,10 @@ const PasswordResetRequests = () => {
     setSaving(true);
     try {
       await adminResetPassword({ staff_id: selected.staff_id, new_password: newPassword });
-      setSuccessId(selected.id);
-      setRequests(prev => prev.filter(r => r.id !== selected.id));
       closeModal();
+      // Fire event so Sidebar refetches badge count immediately
+      window.dispatchEvent(new Event("resetRequestResolved"));
+      navigate("/admin/staff");
     } catch (err) {
       setSaveError(err.response?.data?.detail || "Failed to reset password.");
     } finally {
@@ -67,12 +69,6 @@ const PasswordResetRequests = () => {
         </button>
       </div>
 
-      {successId && (
-        <div className="px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-600 text-sm flex items-center gap-2">
-          <Check size={15} /> Password reset successfully!
-        </div>
-      )}
-
       {error && <div className="px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">{error}</div>}
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -86,8 +82,11 @@ const PasswordResetRequests = () => {
             {requests.map(req => (
               <div key={req.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                    {req.staff_name.charAt(0).toUpperCase()}
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      {req.staff_name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 border-2 border-white rounded-full animate-pulse" />
                   </div>
                   <div>
                     <p className="text-gray-800 font-semibold text-sm">{req.staff_name}</p>

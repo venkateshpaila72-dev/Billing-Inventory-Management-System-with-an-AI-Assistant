@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { loginUser } from "../../services/authService";
-import { Eye, EyeOff, Store, LogIn } from "lucide-react";
+import { Eye, EyeOff, Store, LogIn, X, CheckCircle } from "lucide-react";
+import { forgotPasswordRequest } from "../../services/passwordService";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +11,13 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Forgot password modal
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotForm, setForgotForm] = useState({ email: "", reason: "" });
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState(false);
 
   const { login, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -24,12 +32,10 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     if (!email.trim() || !password.trim()) {
       setError("Please enter both email and password.");
       return;
     }
-
     setLoading(true);
     try {
       const data = await loginUser(email, password);
@@ -52,6 +58,28 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgot = async (e) => {
+    e.preventDefault();
+    setForgotError("");
+    if (!forgotForm.email.trim()) { setForgotError("Email is required."); return; }
+    setForgotLoading(true);
+    try {
+      await forgotPasswordRequest({ email: forgotForm.email, reason: forgotForm.reason || null });
+      setForgotSuccess(true);
+    } catch (err) {
+      setForgotError(err.response?.data?.detail || "Failed to submit request.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const closeForgot = () => {
+    setShowForgot(false);
+    setForgotForm({ email: "", reason: "" });
+    setForgotError("");
+    setForgotSuccess(false);
   };
 
   return (
@@ -114,6 +142,13 @@ const Login = () => {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {/* Forgot password — only addition */}
+                <div className="text-right mt-2">
+                  <button type="button" onClick={() => setShowForgot(true)}
+                    className="text-xs text-slate-400 hover:text-blue-600 transition-colors">
+                    Forgot password?
+                  </button>
+                </div>
               </div>
               <button
                 type="submit"
@@ -142,6 +177,67 @@ const Login = () => {
           © 2024 BillingPro. All rights reserved.
         </p>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-gray-800 font-semibold">Forgot Password</h2>
+              <button onClick={closeForgot} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-6 py-5">
+              {forgotSuccess ? (
+                <div className="text-center py-4">
+                  <CheckCircle size={40} className="text-emerald-500 mx-auto mb-3" />
+                  <p className="text-gray-800 font-semibold">Request Submitted!</p>
+                  <p className="text-gray-400 text-sm mt-2">Your admin has been notified and will reset your password shortly.</p>
+                  <button onClick={closeForgot}
+                    className="w-full mt-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
+                    Back to Login
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgot} className="space-y-4">
+                  <p className="text-gray-400 text-sm">Enter your email and your admin will be notified to reset your password.</p>
+                  {forgotError && (
+                    <div className="px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">{forgotError}</div>
+                  )}
+                  <div>
+                    <label className="label">Your Email *</label>
+                    <input
+                      type="email"
+                      placeholder="your@email.com"
+                      value={forgotForm.email}
+                      onChange={e => setForgotForm(f => ({ ...f, email: e.target.value }))}
+                      className="input"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Reason (optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Forgot my password"
+                      value={forgotForm.reason}
+                      onChange={e => setForgotForm(f => ({ ...f, reason: e.target.value }))}
+                      className="input"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <button type="submit" disabled={forgotLoading}
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
+                    {forgotLoading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                    {forgotLoading ? "Submitting..." : "Submit Request"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

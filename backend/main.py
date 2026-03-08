@@ -1,10 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import app.models
+
 from app.routers import (
     auth, users, password, categories, suppliers,
     products, purchases, customers, sales,
     notifications, returns, analytics, chatbot
 )
+
+
+from app.database.base import Base
+from app.database.session import engine
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Billing & Inventory System",
@@ -33,6 +41,10 @@ app.include_router(notifications.router)
 app.include_router(returns.router)
 app.include_router(analytics.router)
 app.include_router(chatbot.router)
+
+
+
+
 
 
 @app.get("/")
